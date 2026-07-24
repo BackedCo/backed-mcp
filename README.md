@@ -49,12 +49,31 @@ Claude Desktop / Claude Code config:
 }
 ```
 
+## Verify agent ownership from the CLI
+
+If your agent's AP2 private key lives server-side (no browser wallet), prove
+ownership without any copy-paste. Create the challenge in the Backed
+dashboard (Register agent → "Sign from your server"), then run this where
+the key lives:
+
+```bash
+BACKED_AGENT_PRIVATE_KEY=0x... npx backed-mcp verify-agent --challenge <challenge-id>
+```
+
+The command fetches the challenge, signs it locally, and submits the
+signature. The key never leaves your machine.
+
+- `did:pkh:eip155:...` identities: the key is the wallet's secp256k1 private
+  key (32-byte hex); the signature is EIP-191 `personal_sign`.
+- `did:key:z6Mk...` identities: the key is the ed25519 seed (32-byte hex).
+
 ## Configuration (optional)
 
 | Env var | Default | Purpose |
 |---|---|---|
 | `BACKED_API_URL` | `https://api.usebacked.ai` | API base override |
 | `BACKED_API_KEY` | none | Free org API key for higher rate limits |
+| `BACKED_AGENT_PRIVATE_KEY` | none | Agent key for `verify-agent` (signing only, never sent) |
 
 Anonymous use is fine for evaluation (20 requests/min per IP). Register a free API key at [app.usebacked.ai](https://app.usebacked.ai) for production limits.
 

@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 /**
- * backed-mcp: stdio MCP server for the Backed agent trust registry.
+ * backed-mcp: stdio MCP server + CLI for the Backed agent trust registry.
  *
- * Wraps the public Backed API (https://api.usebacked.ai) so any MCP client
- * (Claude Desktop, Claude Code, ChatGPT, agent frameworks) can check an AI
- * agent's on-chain trust score before paying it, discover trusted agents,
- * and fetch badge embed code.
+ * Default (no arguments): starts the MCP server. Wraps the public Backed API
+ * (https://api.usebacked.ai) so any MCP client (Claude Desktop, Claude Code,
+ * ChatGPT, agent frameworks) can check an AI agent's on-chain trust score
+ * before paying it, discover trusted agents, and fetch badge embed code.
+ *
+ * Subcommands:
+ *   verify-agent --challenge <id>   Prove ownership of a registry agent by
+ *                                   signing its pending challenge with the
+ *                                   key in BACKED_AGENT_PRIVATE_KEY.
  *
  * Config (env):
  *   BACKED_API_URL  override the API base (default https://api.usebacked.ai)
@@ -18,6 +23,28 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+
+const USAGE = `backed-mcp — Backed agent trust registry
+
+Usage:
+  backed-mcp                                Start the stdio MCP server
+  backed-mcp verify-agent --challenge <id>  Prove agent ownership (key from
+                                            BACKED_AGENT_PRIVATE_KEY env)
+  backed-mcp help                           Show this help
+`;
+
+const command = process.argv[2];
+if (command === 'verify-agent') {
+  const { runVerifyAgent } = await import('./verify-agent.js');
+  await runVerifyAgent(process.argv.slice(3));
+  process.exit(0);
+} else if (command === 'help' || command === '--help' || command === '-h') {
+  console.log(USAGE);
+  process.exit(0);
+} else if (command !== undefined) {
+  console.error(`Unknown command: ${command}\n\n${USAGE}`);
+  process.exit(1);
+}
 
 const API_URL = process.env.BACKED_API_URL ?? 'https://api.usebacked.ai';
 const API_KEY = process.env.BACKED_API_KEY;
